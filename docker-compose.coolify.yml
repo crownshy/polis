@@ -1,0 +1,184 @@
+# Before running docker compose --profile postgres up for the first time,
+# first copy the env.example file to .env and fill in the values.
+# `cp env.example .env`
+# (edit values as needed)
+#
+# Then, build and run with:
+# `docker compose --profile postgres build`
+# `docker compose --profile postgres up`
+#
+# Subsequently you should only need to run:
+# `docker compose --profile postgres up`
+#
+# Force a full re-build with no cache from previous builds:
+# `docker compose --profile postgres build --no-cache`
+# `docker compose --profile postgres up`
+#
+# If you only changed the .env file, you can do a quick rebuild:
+# `docker compose --profile postgres up --force-recreate`
+#
+# To stop, press CTRL+C (if not running in --detach mode), or run:
+# `docker compose --profile postgres down`
+#
+# omit the --profile postgres flag to run without the postgres service,
+# such as when using postgres on your host machine, or a remote server.
+# (by default, the Makefile will include --profile postgres, unless POSTGRES_DOCKER=false in your env)
+
+services:
+  server:
+    image: docker.io/compdem/polis-server:${TAG:-dev}
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: prod
+      args:
+        NODE_ENV: production
+      labels:
+        polis_tag: ${TAG:-dev}
+    depends_on:
+      - "file-server"
+    # Scale the server container to a given number of instances.
+    scale: 1
+    volumes:
+      # Persist logs to a volume, so they can be accessed after the container is stopped.
+      - server-logs:/app/logs
+    environment:
+      ADMIN_UIDS=${ADMIN_UIDS}
+      EMAIL_TRANSPORT_TYPES=${EMAIL_TRANSPORT_TYPES}
+      GIT_HASH=${GIT_HASH}
+      MATH_ENV=${MATH_ENV}
+      SERVER_ENV_FILE=${SERVER_ENV_FILE}
+      SERVER_LOG_LEVEL=${SERVER_LOG_LEVEL}
+      READ_ONLY_DATABASE_URL=${READ_ONLY_DATABASE_URL}
+      POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_PORT=${POSTGRES_PORT}
+      POSTGRES_HOST=${POSTGRES_HOST}
+      POSTGRES_USER=${POSTGRES_USER}
+      POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      DATABASE_URL=${DATABASE_URL}
+      TAG=${TAG}
+      COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
+      API_SERVER_PORT=${API_SERVER_PORT}
+      HTTP_PORT=${HTTP_PORT}
+      HTTPS_PORT=${HTTPS_PORT}
+      STATIC_FILES_PORT=${STATIC_FILES_PORT}
+      STATIC_FILES_ADMIN_PORT=${STATIC_FILES_ADMIN_PORT}
+      STATIC_FILES_PARTICIPATION_PORT=${STATIC_FILES_PARTICIPATION_PORT}
+      ADMIN_EMAIL_DATA_EXPORT_TEST=${ADMIN_EMAIL_DATA_EXPORT_TEST}
+      ADMIN_EMAIL_DATA_EXPORT=${ADMIN_EMAIL_DATA_EXPORT}
+      ADMIN_EMAIL_EMAIL_TEST=${ADMIN_EMAIL_EMAIL_TEST}
+      ADMIN_EMAILS=${ADMIN_EMAILS}
+      POLIS_FROM_ADDRESS=${POLIS_FROM_ADDRESS}
+      CACHE_MATH_RESULTS=${CACHE_MATH_RESULTS}
+      BACKFILL_COMMENT_LANG_DETECTION=${BACKFILL_COMMENT_LANG_DETECTION}
+      DEV_MODE=${DEV_MODE}
+      RUN_PERIODIC_EXPORT_TESTS=${RUN_PERIODIC_EXPORT_TESTS}
+      SERVER_LOG_TO_FILE=${SERVER_LOG_TO_FILE}
+      SHOULD_USE_TRANSLATION_API=${SHOULD_USE_TRANSLATION_API}
+      API_DEV_HOSTNAME=${API_DEV_HOSTNAME}
+      API_PROD_HOSTNAME=${API_PROD_HOSTNAME}
+      DOMAIN_OVERRIDE=${DOMAIN_OVERRIDE}
+      DOMAIN_WHITELIST_ITEM_01=${DOMAIN_WHITELIST_ITEM_01}
+      DOMAIN_WHITELIST_ITEM_02=${DOMAIN_WHITELIST_ITEM_02}
+      DOMAIN_WHITELIST_ITEM_03=${DOMAIN_WHITELIST_ITEM_03}
+      DOMAIN_WHITELIST_ITEM_04=${DOMAIN_WHITELIST_ITEM_04}
+      DOMAIN_WHITELIST_ITEM_05=${DOMAIN_WHITELIST_ITEM_05}
+      DOMAIN_WHITELIST_ITEM_06=${DOMAIN_WHITELIST_ITEM_06}
+      DOMAIN_WHITELIST_ITEM_07=${DOMAIN_WHITELIST_ITEM_07}
+      DOMAIN_WHITELIST_ITEM_08=${DOMAIN_WHITELIST_ITEM_08}
+      EMBED_SERVICE_HOSTNAME=${EMBED_SERVICE_HOSTNAME}
+      SERVICE_URL=${SERVICE_URL}
+      STATIC_FILES_HOST=${STATIC_FILES_HOST}
+      AKISMET_ANTISPAM_API_KEY=${AKISMET_ANTISPAM_API_KEY}
+      AWS_REGION=${AWS_REGION}
+      ENABLE_TWITTER_WIDGETS=${ENABLE_TWITTER_WIDGETS}
+      FB_APP_ID=${FB_APP_ID}
+      GA_TRACKING_ID=${GA_TRACKING_ID}
+      GOOGLE_CREDENTIALS_BASE64=${GOOGLE_CREDENTIALS_BASE64}
+      GOOGLE_CREDS_STRINGIFIED=${GOOGLE_CREDS_STRINGIFIED}
+      MAILGUN_API_KEY=${MAILGUN_API_KEY}
+      MAILGUN_DOMAIN=${MAILGUN_DOMAIN}
+      MAXMIND_LICENSEKEY=${MAXMIND_LICENSEKEY}
+      MAXMIND_USERID=${MAXMIND_USERID}
+      TWITTER_CONSUMER_KEY=${TWITTER_CONSUMER_KEY}
+      TWITTER_CONSUMER_SECRET=${TWITTER_CONSUMER_SECRET}
+      AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      ENCRYPTION_PASSWORD_00001=${ENCRYPTION_PASSWORD_00001}
+      WEBSERVER_PASS=${WEBSERVER_PASS}
+      WEBSERVER_USERNAME=${WEBSERVER_USERNAME}
+
+
+  math:
+    image: docker.io/compdem/polis-math:${TAG:-dev}
+    build:
+      context: ./math
+      labels:
+        polis_tag: ${TAG:-dev}
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MATH_ENV=${MATH_ENV:-prod}
+      - WEBSERVER_USERNAME=${WEBSERVER_USERNAME}
+      - WEBSERVER_PASS=${WEBSERVER_PASS}
+
+  postgres:
+    image: docker.io/compdem/polis-postgres:${TAG:-dev}
+    restart: always
+    build:
+      context: ./server
+      dockerfile: Dockerfile-db
+      labels:
+        polis_tag: ${TAG:-dev}
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+    volumes:
+      - "backups:/backups"
+      - "postgres:/var/lib/postgresql/data"
+    profiles:
+      - postgres
+
+  nginx-proxy:
+    image: docker.io/compdem/polis-nginx-proxy:${TAG:-dev}
+    build:
+      context: ./file-server
+      dockerfile: nginx.Dockerfile
+      labels:
+        polis_tag: ${TAG:-dev}
+    depends_on:
+      - "server"
+    ports:
+      - ${HTTP_PORT:-80}:80
+      - ${HTTPS_PORT:-443}:443
+
+  file-server:
+    image: docker.io/compdem/polis-file-server:${TAG:-dev}
+    build:
+      context: ./
+      dockerfile: file-server/Dockerfile
+      labels:
+        polis_tag: ${TAG:-dev}
+      args:
+        EMBED_SERVICE_HOSTNAME: ${EMBED_SERVICE_HOSTNAME}
+        ENABLE_TWITTER_WIDGETS: ${ENABLE_TWITTER_WIDGETS:-false}
+        FB_APP_ID: ${FB_APP_ID}
+        GA_TRACKING_ID: ${GA_TRACKING_ID}
+        GIT_HASH: "${GIT_HASH:-placeholder}"
+        NODE_ENV: production
+        SERVICE_URL: ${SERVICE_URL}
+    environment:
+      - PORT=${STATIC_FILES_PORT:-8080}
+
+
+volumes:
+  backups:
+    labels:
+      polis_tag: ${TAG:-dev}
+  postgres:
+    labels:
+      polis_tag: ${TAG:-dev}
+  server-logs:
+    labels:
+      polis_tag: ${TAG:-dev}
