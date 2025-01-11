@@ -20,6 +20,7 @@ RUN apk add --no-cache --virtual .build \
   g++ make python3
 
 COPY package*.json ./
+RUN printenv 
 
 EXPOSE 5000
 

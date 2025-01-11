@@ -137,8 +137,6 @@ services:
     volumes:
       - "backups:/backups"
       - "postgres:/var/lib/postgresql/data"
-    profiles:
-      - postgres
 
   nginx-proxy:
     image: docker.io/compdem/polis-nginx-proxy:${TAG:-dev}
