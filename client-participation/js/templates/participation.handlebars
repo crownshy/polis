@@ -47,13 +47,6 @@
     {{#unless useBannerHeader}}
       {{#if showLogoAndBreadCrumbInHeader}}
           <div class="HeadingA">
-            <a href="pol.is">
-              <img
-                width="164px"
-                src="https://pol.is/polis_logo_2.png"
-                alt=""
-                >
-            </a>
             <a
               style="
                 vertical-align: middle;
@@ -63,16 +56,6 @@
             /s/{{context}}
             </a>
           </div>
-      {{else}}
-        {{#if showLogoInHeader}}
-          <div class="HeadingA">
-            <img
-              width="164px"
-              src="https://pol.is/polis_logo_2.png"
-              alt=""
-              >
-          </div>
-        {{/if}}
       {{/if}}
     {{/unless}}
 
@@ -437,9 +420,16 @@
 {{#unless no_footer}}
 
   <div style="margin-top: 40px; margin-bottom: 20px;" data-test-footer>
-    <a href="https://pol.is" target="_blank" dir="auto">
-      {{> logo}}
-    </a>
+    <span>Powered by 
+      <a href="https://poliscommunity.crown-shy.com/" target="_blank" dir="auto">
+        Polis
+      </a>
+      and 
+      <a href="https://crown-shy.com/" target="_blank" dir="auto">
+        CrownShy
+      </a>
+    </span>
+
     <div
       style="
         margin-top: 15px;
