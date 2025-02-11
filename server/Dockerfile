@@ -13,6 +13,9 @@ ARG NODE_ENV
 
 WORKDIR /app
 
+# Install Python and necessary tools (including pip)
+RUN apk add --no-cache python3 py3-pip
+
 # This package is needed at runtime
 RUN apk add libpq-dev
 
@@ -55,5 +58,3 @@ COPY . .
 RUN npm run build
 
 CMD npm run serve
-
-

@@ -12,6 +12,8 @@ import fs from "fs/promises";
 import { parse } from "csv-parse/sync";
 import { create } from "xmlbuilder2";
 import { sendCommentGroupsSummary } from "./export";
+import { getTopicsFromRID } from "../report_experimental/topics-example";
+import DynamoStorageService from "../utils/storage";
 
 const js2xmlparser = require("js2xmlparser");
 
@@ -109,9 +111,12 @@ const anthropic = new Anthropic({
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 const gemeniModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-pro-002",
+  // model: "gemini-1.5-pro-002",
+  model: "gemini-2.0-pro-exp-02-05",
   generationConfig: {
+    // https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GenerationConfig
     responseMimeType: "application/json",
+    maxOutputTokens: 50000, // high for reliability for now.
   },
 });
 
@@ -123,14 +128,20 @@ const getCommentsAsXML = async (
     disagrees: number;
     passes: number;
     group_aware_consensus?: number;
+    comment_extremity?: number;
+    comment_id: number;
   }) => boolean
 ) => {
   try {
     const resp = await sendCommentGroupsSummary(id, undefined, false, filter);
     const xml = PolisConverter.convertToXml(resp as string);
+    // eslint-disable-next-line no-console
+    if (xml.trim().length === 0)
+      console.error("No data has been returned by sendCommentGroupsSummary");
     return xml;
   } catch (e) {
-    return ""; // Return empty string on error to avoid undefined
+    console.error("Error in getCommentsAsXML:", e);
+    throw e; // Re-throw instead of returning empty string
   }
 };
 
@@ -144,32 +155,77 @@ interface ReportSection {
     disagrees: number;
     passes: number;
     group_aware_consensus?: number;
+    comment_extremity?: number;
+    comment_id: number;
   }) => boolean;
 }
 
 // Define the report sections with filters
-const reportSections: ReportSection[] = [
-  {
-    name: "uncertainty",
-    templatePath: "src/prompts/report_experimental/subtasks/uncertainty.xml",
-    // Revert to original simple pass ratio check
-    filter: (v) => v.passes / v.votes >= 0.2,
-  },
-  {
-    name: "group_informed_consensus",
-    templatePath:
-      "src/prompts/report_experimental/subtasks/group_informed_consensus.xml",
-    filter: (v) => (v.group_aware_consensus ?? 0) > 0.7,
-  },
-];
+const getReportSections = (topics: { name: string; citations: number[] }[]) => {
+  return [
+    {
+      name: "group_informed_consensus",
+      templatePath:
+        "src/report_experimental/subtaskPrompts/group_informed_consensus.xml",
+      filter: (v: { group_aware_consensus: number }) =>
+        (v.group_aware_consensus ?? 0) > 0.7,
+    },
+    {
+      name: "groups",
+      templatePath: "src/report_experimental/subtaskPrompts/groups.xml",
+      filter: (v: { comment_extremity: number }) => {
+        return (v.comment_extremity ?? 0) > 1;
+      },
+    },
+    {
+      name: "uncertainty",
+      templatePath: "src/report_experimental/subtaskPrompts/uncertainty.xml",
+      // Revert to original simple pass ratio check
+      filter: (v: { passes: number; votes: number }) =>
+        v.passes / v.votes >= 0.2,
+    },
+    ...topics.map((topic: { name: string; citations: number[] }) => ({
+      name: `topic_${topic.name.toLowerCase().replace(/\s+/g, "_")}`,
+      templatePath: "src/report_experimental/subtaskPrompts/topics.xml",
+      filter: (v: { comment_id: number }) => {
+        // Check if the comment_id is in the citations array for this topic
+        return topic.citations.includes(v.comment_id);
+      },
+    })),
+  ];
+};
+
+type QueryParams = {
+  [key: string]: string | string[] | undefined;
+};
+
+const isFreshData = (timestamp: string) => {
+  const now = new Date().getTime();
+  const then = new Date(timestamp).getTime();
+  const elapsed = Math.abs(now - then);
+  return (
+    elapsed <
+    (((process.env.MAX_REPORT_CACHE_DURATION as unknown) as number) || 3600000)
+  );
+};
 
 export async function handle_GET_reportNarrative(
-  req: { p: { rid: string } },
+  req: { p: { rid: string }; query: QueryParams },
   res: Response
 ) {
+  let storage;
+  if (process.env.AWS_REGION && process.env.AWS_REGION?.trim().length > 0) {
+    storage = new DynamoStorageService(
+      process.env.AWS_REGION,
+      "report_narrative_store"
+    );
+  }
+  const sectionParam = req.query.section;
+  const modelParam = req.query.model;
+  let tpcs;
   res.writeHead(200, {
     "Content-Type": "text/plain; charset=utf-8",
-    "Transfer-Encoding": "chunked"
+    "Transfer-Encoding": "chunked",
   });
   const { rid } = req.p;
 
@@ -178,6 +234,11 @@ export async function handle_GET_reportNarrative(
   // @ts-expect-error flush - calling due to use of compression
   res.flush();
 
+  const system_lore = await fs.readFile(
+    "src/report_experimental/system.xml",
+    "utf8"
+  );
+
   try {
     const zid = await getZidForRid(rid);
     if (!zid) {
@@ -185,140 +246,238 @@ export async function handle_GET_reportNarrative(
       return;
     }
 
+    res.write(`POLIS-PING: retrieving topics`);
+
+    // @ts-expect-error flush - calling due to use of compression
+    res.flush();
+    const cachedTopics = await storage?.queryItemsByRidSectionModel(
+      `${rid}#topics`
+    );
+
+    if (cachedTopics?.length && isFreshData(cachedTopics[0].timestamp)) {
+      tpcs = cachedTopics[0].report_data;
+    } else {
+      if (cachedTopics?.length) {
+        storage?.deleteReportItem(
+          cachedTopics[0].rid_section_model,
+          cachedTopics[0].timestamp
+        );
+      }
+      tpcs = await getTopicsFromRID(zid);
+      const reportItemTopics = {
+        rid_section_model: `${rid}#topics`,
+        timestamp: new Date().toISOString(),
+        report_data: tpcs,
+      };
+
+      storage?.putItem(reportItemTopics);
+    }
+
+    const reportSections = getReportSections(tpcs);
 
     res.write(`POLIS-PING: retrieving system lore`);
-
-    const system_lore = await fs.readFile(
-      "src/prompts/report_experimental/system.xml",
-      "utf8"
-    );
 
     // @ts-expect-error flush - calling due to use of compression
     res.flush();
 
     for (const section of reportSections) {
-      const fileContents = await fs.readFile(section.templatePath, "utf8");
-      const json = await convertXML(fileContents);
-      const structured_comments = await getCommentsAsXML(zid, section.filter);
-
-      json.polisAnalysisPrompt.children[
-        json.polisAnalysisPrompt.children.length - 1
-      ].data.content = { structured_comments };
-
-      const prompt_xml = js2xmlparser.parse(
-        "polis-comments-and-group-demographics",
-        json
+      const s = sectionParam
+        ? reportSections.find((s) => s.name === sectionParam) || section
+        : section;
+      const cachedResponseClaude = await storage?.queryItemsByRidSectionModel(
+        `${rid}#${s.name}#claude`
+      );
+      const cachedResponseGemini = await storage?.queryItemsByRidSectionModel(
+        `${rid}#${s.name}#gemini`
       );
 
-      const responseClaude = await anthropic.messages.create({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 1000,
-        temperature: 0,
-        system: system_lore,
-        messages: [
-          {
-            role: "user",
-            content: [{ type: "text", text: prompt_xml }],
-          },
-          {
-            role: "assistant",
-            content: [{ type: "text", text: "{" }],
-          },
-        ],
-      });
+      const fileContents = await fs.readFile(s.templatePath, "utf8");
+      const json = await convertXML(fileContents);
+      // @ts-expect-error function args ignore temp
+      const structured_comments = await getCommentsAsXML(zid, s.filter);
+      // send cached response first if avalable
+      if (
+        Array.isArray(cachedResponseClaude) &&
+        cachedResponseClaude?.length &&
+        Array.isArray(cachedResponseGemini) &&
+        cachedResponseGemini?.length &&
+        isFreshData(cachedResponseClaude[0].timestamp) &&
+        isFreshData(cachedResponseGemini[0].timestamp)
+      ) {
+        res.write(
+          JSON.stringify({
+            [s.name]: {
+              responseGemini: cachedResponseGemini[0].report_data,
+              responseClaude: cachedResponseClaude[0].report_data,
+              errors:
+                structured_comments?.trim().length === 0
+                  ? "NO_CONTENT_AFTER_FILTER"
+                  : undefined,
+            },
+          }) + `|||`
+        );
+      } else {
+        if (
+          Array.isArray(cachedResponseClaude) &&
+          cachedResponseClaude?.length
+        ) {
+          storage?.deleteReportItem(
+            cachedResponseClaude[0].rid_section_model,
+            cachedResponseClaude[0].timestamp
+          );
+        }
+        if (
+          Array.isArray(cachedResponseGemini) &&
+          cachedResponseGemini?.length
+        ) {
+          storage?.deleteReportItem(
+            cachedResponseGemini[0].rid_section_model,
+            cachedResponseGemini[0].timestamp
+          );
+        }
+        json.polisAnalysisPrompt.children[
+          json.polisAnalysisPrompt.children.length - 1
+        ].data.content = { structured_comments };
 
-      const gemeniModelprompt: GenerateContentRequest = {
-        contents: [
-          {
-            parts: [{
-              text: prompt_xml,
-            }],
-            role: "user"
-          },
-        ],
-        systemInstruction: system_lore,
-      };
+        const prompt_xml = js2xmlparser.parse(
+          "polis-comments-and-group-demographics",
+          json
+        );
 
-      const respGem = await gemeniModel.generateContent(gemeniModelprompt);
-      const responseGemini = await respGem.response.text();
+        if ((modelParam as string)?.trim()) {
+          const responseClaude = await anthropic.messages.create({
+            model: "claude-3-5-haiku-20241022",
+            max_tokens: 3000,
+            temperature: 0,
+            system: system_lore,
+            messages: [
+              {
+                role: "user",
+                content: [{ type: "text", text: prompt_xml }],
+              },
+              {
+                role: "assistant",
+                content: [{ type: "text", text: "{" }],
+              },
+            ],
+          });
+          res.write(
+            JSON.stringify({
+              [s.name]: {
+                responseClaude,
+                errors:
+                  structured_comments?.trim().length === 0
+                    ? "NO_CONTENT_AFTER_FILTER"
+                    : undefined,
+              },
+            }) + `|||`
+          );
+        } else {
+          const responseClaude = await anthropic.messages.create({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 3000,
+            temperature: 0,
+            system: system_lore,
+            messages: [
+              {
+                role: "user",
+                content: [{ type: "text", text: prompt_xml }],
+              },
+              {
+                role: "assistant",
+                content: [{ type: "text", text: "{" }],
+              },
+            ],
+          });
 
-      res.write(JSON.stringify({ [section.name]: { responseGemini, responseClaude } }));
+          const gemeniModelprompt: GenerateContentRequest = {
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `
+                      ${prompt_xml}
+
+                      You MUST respond with a JSON object that follows this EXACT structure:
+
+                      \`\`\`json
+                      {
+                        "key1": "string value",
+                        "key2": [
+                          {
+                            "nestedKey1": 123,
+                            "nestedKey2": "another string"
+                          }
+                        ],
+                        "key3": true
+                      }
+                      \`\`\`
+
+                      Make sure the JSON is VALID. DO NOT begin with an array '[' - begin with an object '{' - All keys MUST be enclosed in double quotes. NO trailing comma's should be included after the last element in a block (not valid json). Do NOT include any additional text outside of the JSON object.  Do not provide explanations, only the JSON.
+                    `,
+                  },
+                ],
+                role: "user",
+              },
+            ],
+            systemInstruction: system_lore,
+          };
+
+          const respGem = await gemeniModel.generateContent(gemeniModelprompt);
+          const responseGemini = await respGem.response.text();
+
+          const reportItemClaude = {
+            rid_section_model: `${rid}#${s.name}#claude`,
+            timestamp: new Date().toISOString(),
+            report_data: responseClaude,
+            errors:
+              structured_comments?.trim().length === 0
+                ? "NO_CONTENT_AFTER_FILTER"
+                : undefined,
+          };
+
+          storage?.putItem(reportItemClaude);
+
+          const reportItemGemini = {
+            rid_section_model: `${rid}#${s.name}#gemini`,
+            timestamp: new Date().toISOString(),
+            report_data: responseGemini,
+            errors:
+              structured_comments?.trim().length === 0
+                ? "NO_CONTENT_AFTER_FILTER"
+                : undefined,
+          };
+
+          storage?.putItem(reportItemGemini);
+
+          res.write(
+            JSON.stringify({
+              [s.name]: {
+                responseGemini,
+                responseClaude,
+                errors:
+                  structured_comments?.trim().length === 0
+                    ? "NO_CONTENT_AFTER_FILTER"
+                    : undefined,
+              },
+            }) + `|||`
+          );
+        }
+      }
+
       // @ts-expect-error flush - calling due to use of compression
       res.flush();
+
+      if ((sectionParam as string)?.trim() && sectionParam === s.name) {
+        break;
+      }
     }
-  
-
-    // Process each section
-    // const sectionResults = await Promise.all(
-    //   reportSections.map(async (section) => {
-    //     const fileContents = await fs.readFile(section.templatePath, "utf8");
-    //     const json = await convertXML(fileContents);
-    //     const structured_comments = await getCommentsAsXML(zid, section.filter);
-
-    //     json.polisAnalysisPrompt.children[
-    //       json.polisAnalysisPrompt.children.length - 1
-    //     ].data.content = { structured_comments };
-
-    //     const prompt_xml = js2xmlparser.parse(
-    //       "polis-comments-and-group-demographics",
-    //       json
-    //     );
-
-    //     const responseClaude = await anthropic.messages.create({
-    //       model: "claude-3-5-sonnet-20241022",
-    //       max_tokens: 1000,
-    //       temperature: 0,
-    //       system: system_lore,
-    //       messages: [
-    //         {
-    //           role: "user",
-    //           content: [{ type: "text", text: prompt_xml }],
-    //         },
-    //         {
-    //           role: "assistant",
-    //           content: [{ type: "text", text: "{" }],
-    //         },
-    //       ],
-    //     });
-
-    //     const gemeniModelprompt: GenerateContentRequest = {
-    //       contents: [
-    //         {
-    //           parts: [{
-    //             text: prompt_xml,
-    //           }],
-    //           role: "user"
-    //         },
-    //         // {
-    //         //   parts: [{
-    //         //     text: prompt_xml,
-    //         //   }],
-    //         //   role: "user"
-    //         // }
-    //       ],
-    //       systemInstruction: system_lore,
-    //     };
-
-    //     const respGem = await gemeniModel.generateContent(gemeniModelprompt);
-    //     const responseGemini = await respGem.response.text();
-
-    //     return {
-    //       [section.name]: {
-    //         responseClaude,
-    //         responseGemini,
-    //       },
-    //     };
-    //   })
-    // );
-
-    // // Combine all section results
-    // const combinedResults = Object.assign({}, ...sectionResults);
-
-    // res.write(JSON.stringify({ narrative: "A narrative report summarizing a polis conversation, Nov 26.", ...combinedResults }));
 
     res.end();
-
   } catch (err) {
+    // @ts-expect-error flush - calling due to use of compression
+    res.flush();
+    console.log(err);
     const msg =
       err instanceof Error && err.message && err.message.startsWith("polis_")
         ? err.message

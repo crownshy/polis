@@ -6,6 +6,10 @@ var Utils = require("./util/utils");
 var translations = {
   // Arabic
   ar: require("./strings/ar.js"),
+  // Burmese
+  my: require("./strings/my.js"),
+  // Croatian
+  hr: require("./strings/hr.js"),
   // Welsh
   cy: require("./strings/cy.js"),
   // Danish
@@ -26,8 +30,6 @@ var translations = {
   fy: require("./strings/fy_nl.js"),
   // Hebrew
   he: require("./strings/he.js"),
-  // Croatian
-  hr: require("./strings/hr.js"),
   // Italian
   it: require("./strings/it.js"),
   // Japanese
@@ -37,6 +39,7 @@ var translations = {
   // Portuguese
   // Brazilian Portuguese (all portuguese speakers are temporarily using the same file.)
   pt_br: require("./strings/pt_br.js"),
+  ps: require("./strings/ps.js"),
   // Portuguese (Timor-Leste)
   // pt_tl: require("./strings/pt_tl.js"),
   // Romanian & Moldovan
@@ -45,12 +48,16 @@ var translations = {
   ru: require("./strings/ru.js"),
   // Slovak
   sk: require("./strings/sk.js"),
+  // Swahili
+  sw: require("./strings/sw.js"),
   // Tamil
   ta: require("./strings/ta.js"),
   // Tetum (Timor)
   tdt: require("./strings/tdt.js"),
   // Ukrainian
   uk: require("./strings/uk.js"),
+  // Vietnamese
+  vi: require("./strings/vi.js"),
   // Chinese
   // zh-Hans is Simplified Chinese. (CN, SG and MY can use the same file.)
   zh_Hans: require("./strings/zh_Hans.js"),
@@ -99,6 +106,8 @@ preloadHelper.acceptLanguagePromise.then(function() {
       _.extend(strings, translations.es);
     } else if (languageCode.match(/^fa/)) {
       _.extend(strings, translations.fa);
+    } else if (languageCode.match(/^hr/)) {
+      _.extend(strings, translations.hr);
     } else if (languageCode.match(/^fr/)) {
       _.extend(strings, translations.fr);
     } else if (languageCode.match(/^nl/)) {
@@ -123,8 +132,6 @@ preloadHelper.acceptLanguagePromise.then(function() {
       _.extend(strings, translations.ru);
     } else if (languageCode.match(/^ro/)) {
       _.extend(strings, translations.ro);
-    } else if (languageCode.match(/^hr/)) {
-      _.extend(strings, translations.hr);
     } else if (languageCode.match(/^ar/)) {
       _.extend(strings, translations.ar);
     } else if (languageCode.match(/^fy/)) {
@@ -133,6 +140,14 @@ preloadHelper.acceptLanguagePromise.then(function() {
       _.extend(strings, translations.ta);
     } else if (languageCode.match(/^tdt/)) {
       _.extend(strings, translations.tdt);
+    } else if (languageCode.match(/^my/)) {
+      _.extend(strings, translations.my);
+    } else if (languageCode.match(/^ps/)) {
+      _.extend(strings, translations.ps);
+    } else if (languageCode.match(/^sw/)) {
+      _.extend(strings, translations.sw);
+    } else if (languageCode.match(/^vi/)) {
+      _.extend(strings, translations.vi);
     }
   });
 });

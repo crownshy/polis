@@ -16,6 +16,10 @@ describe('Interface internationalization', function () {
     checkTranslation('ar', this.convoId)
   })
 
+  it('translates into Croatian', function () {
+    checkTranslation('hr', this.convoId)
+  })
+
   it('translates into Welsh', function () {
     checkTranslation('cy', this.convoId)
   })
@@ -32,12 +36,24 @@ describe('Interface internationalization', function () {
     checkTranslation('el', this.convoId)
   })
 
+  it('translates into Burmese', function () {
+    checkTranslation('my', this.convoId)
+  })
+
   it('translates into English', function () {
     checkTranslation('en', this.convoId)
   })
 
+  it('translates into Pashto', function () {
+    checkTranslation('ps', this.convoId)
+  })
+
   it('translates into Spanish', function () {
     checkTranslation('es', this.convoId)
+  })
+
+  it('translates into Swahili', function () {
+    checkTranslation('sw', this.convoId)
   })
 
   it('translates into Farsi', function () {
@@ -54,10 +70,6 @@ describe('Interface internationalization', function () {
 
   it('translates into Hebrew', function () {
     checkTranslation('he', this.convoId)
-  })
-
-  it('translates into Croatian', function () {
-    checkTranslation('hr', this.convoId)
   })
 
   it('translates into Italian', function () {
@@ -108,5 +120,9 @@ describe('Interface internationalization', function () {
   // zh-TW
   it('translates into Chinese (Traditional)', function () {
     checkTranslation('zh-TW', this.convoId)
+  })
+
+  it('translates into Vietnamese', function () {
+    checkTranslation('vi', this.convoId)
   })
 })

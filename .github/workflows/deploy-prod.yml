@@ -1,37 +1,35 @@
-name: Deploy Preprod
+name: Deploy Prod
 
 on:
   push:
     branches:
-      - edge
+      - stable
 
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Heroku CLI
-        run: |
-          curl https://cli-assets.heroku.com/install.sh | sh
-
       - name: Login to Heroku
         uses: akhileshns/heroku-deploy@v3.13.15
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "polis-preprod"
+          heroku_app_name: "polisapp"
           heroku_email: ${{secrets.HEROKU_EMAIL}}
-          branch: "edge"
+          branch: "stable"
           
       - name: Deploy to Heroku
         run: |
-          git push https://heroku:${{secrets.HEROKU_API_KEY}}@git.heroku.com/polis-preprod.git edge:main
+          git push https://heroku:${{secrets.HEROKU_API_KEY}}@git.heroku.com/polisapp.git stable:main
 
   deploy-static:
     runs-on: ubuntu-latest
     needs: deploy-backend
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -41,8 +39,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{secrets.AWS_PREPROD_ROLE_ARN}}
-          role-session-name: GitHubActionsDeployPreprod
+          role-to-assume: ${{secrets.AWS_PROD_ROLE_ARN}}
+          role-session-name: GitHubActionsDeployProd
           aws-region: us-east-1
 
       - name: Create empty .env file
@@ -50,10 +48,10 @@ jobs:
 
       - name: Build static assets
         env:
-          EMBED_SERVICE_HOSTNAME: preprod.pol.is
+          EMBED_SERVICE_HOSTNAME: pol.is
           ENABLE_TWITTER_WIDGETS: true
           GA_TRACKING_ID: G-WVP78N35QR
-          SERVICE_URL: https://preprod.pol.is
+          SERVICE_URL: https://pol.is
         run: |
           docker compose create --build --force-recreate file-server
           CONTAINER_ID=$(docker ps -qaf name=file-server)
@@ -71,4 +69,4 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          python deploy/deploy-static-assets.py --bucket edge.static-assets.pol.is
+          python deploy/deploy-static-assets.py --bucket prod.static-assets.pol.is

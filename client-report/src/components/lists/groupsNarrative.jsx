@@ -1,20 +1,23 @@
-import React, { useState } from "react";
+// Copyright (C) 2012-present, The Authors. This program is free software: you can redistribute it and/or  modify it under the terms of the GNU Affero General Public License, version 3, as published by the Free Software Foundation. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import React from "react";
+import CommentList from "./commentList.jsx";
 import * as globals from "../globals.js";
 import Narrative from "../narrative/index.jsx";
-import CommentList from "./commentList.jsx";
-const ConsensusNarrative = ({
-  math,
-  comments,
+
+const GroupsNarrative = ({
   conversation,
+  comments,
   ptptCount,
   formatTid,
+  math,
   voteColors,
   narrative,
   model,
 }) => {
   try {
     const txt =
-      model === "claude" ? narrative.responseClaude.content[0].text : narrative.responseGemini;
+      model === "claude" ? narrative?.responseClaude.content[0].text : narrative?.responseGemini;
 
     const narrativeJSON = model === "claude" ? JSON.parse(`{${txt}`) : JSON.parse(txt);
 
@@ -32,9 +35,10 @@ const ConsensusNarrative = ({
 
     // Deduplicate the IDs
     const dedupedTids = [...new Set(uniqueTids || [])];
+
     return (
       <div>
-        <p style={globals.primaryHeading}> Consensus Across Groups </p>
+        <p style={globals.primaryHeading}> Differences Between Groups </p>
         <p style={globals.paragraph}>
           This narrative summary may contain hallucinations. Check each clause.
         </p>
@@ -57,7 +61,7 @@ const ConsensusNarrative = ({
   } catch (err) {
     console.error("Failed to parse narrative:", {
       error: err,
-      rawText: narrative?.responseClaude?.content[0]?.text,
+      rawText: narrative.responseClaude?.content[0]?.text,
       model,
     });
     return (
@@ -68,4 +72,5 @@ const ConsensusNarrative = ({
     );
   }
 };
-export default ConsensusNarrative;
+
+export default GroupsNarrative;
