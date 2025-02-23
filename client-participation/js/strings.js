@@ -6,6 +6,7 @@ var Utils = require("./util/utils");
 var translations = {
   // Arabic
   ar: require("./strings/ar.js"),
+  ar_sy: require("./strings/ar-sy.js"),
   // Burmese
   my: require("./strings/my.js"),
   // Croatian
@@ -134,6 +135,8 @@ preloadHelper.acceptLanguagePromise.then(function() {
       _.extend(strings, translations.ro);
     } else if (languageCode.match(/^ar/)) {
       _.extend(strings, translations.ar);
+    } else if (languageCode.match(/^ar-sy/)) {
+      _.extend(strings, translations.ar_sy);
     } else if (languageCode.match(/^fy/)) {
       _.extend(strings, translations.fy);
     } else if (languageCode.match(/^ta/)) {
