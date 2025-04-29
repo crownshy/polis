@@ -56,8 +56,9 @@ If you are deploying to a custom domain (not `pol.is`) then you need to update b
 - **`EMAIL_TRANSPORT_TYPES`** comma-separated list of email services to use (see [Email Transports](#email-transports) below)
 - **`GIT_HASH`** Set programmatically using `git rev-parse HEAD` (e.g. in `Makefile`) to tag docker container versions and other release assets. Can be left blank.
 - **`MATH_ENV`** Set to `prod` (default), `preprod`, `dev` or arbitrary feature flag. In cases where a single database is used for multiple environments, this value is used by the API service to request the correct data. (Using a single DB for multiple environments in this fashion is no longer recommended, and so the default value of `prod` is recommended.)
+- **`MATH_LOG_LEVEL`** Used by the math service to determine how much logging to output. Reasonable values are `debug`, `info`, `warn`, and `error`. Defaults to `warn`.
 - **`SERVER_ENV_FILE`** The name of an environment file to be passed into the API Server container by docker compose. Defaults to `.env` if left blank. Used especially for building a `test` version of the project for end-to-end testing.
-- **`SERVER_LOG_LEVEL`** Used by Winston.js in the API server to determine how much logging to output. Reasonable values are `debug`, `info`, and `error`. Defaults to `info`.
+- **`SERVER_LOG_LEVEL`** Used by Winston.js in the API server to determine how much logging to output. Reasonable values are `debug`, `info`, `warn`, and `error`. Defaults to `warn`.
 
 ### Database
 
@@ -75,6 +76,10 @@ If you are deploying to a custom domain (not `pol.is`) then you need to update b
 
 - **`DATABASE_URL`** should be the combination of above values, `postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}/${POSTGRES_DB}`
 - **`POSTGRES_DOCKER`** Set to `false` if using a postgres database outside of docker. Defaults to `true`. Read by Makefile.
+
+#### DynamoDB
+
+- **`DYNAMODB_ENDPOINT`** (optional) DynamoDB endpoint. If not set, the default AWS SDK endpoint will be used.
 
 ### Docker Concerns
 
@@ -109,6 +114,7 @@ If you are deploying to a custom domain (not `pol.is`) then you need to update b
 - **`RUN_PERIODIC_EXPORT_TESTS`** Set this to `true` to run periodic export tests, sent to the **`ADMIN_EMAIL_DATA_EXPORT_TEST`** address.
 - **`SERVER_LOG_TO_FILE`** Set this to `true` to tell Winston.js to also write log files to server/logs/. Defaults to `false`. *Note that if using docker compose, server/logs is mounted as a persistent volume.*
 - **`SHOULD_USE_TRANSLATION_API`** Set this to `true` if using Google translation service. See [Enabling Comment Translation](#enabling-comment-translation) below.
+- **`USE_NETWORK_HOST`** Set this to `true` if using server within an internal network (e.g. AWS) such that SSL is not required.
 
 ### URL/Hostname Settings
 
@@ -125,15 +131,15 @@ If you are deploying to a custom domain (not `pol.is`) then you need to update b
 (All are optional, and omitting them will disable the related feature.)
 
 - **`AKISMET_ANTISPAM_API_KEY`** Comment spam detection and filtering.
-- **`AWS_REGION`** Used for S3 data import/export.
-- **`ENABLE_TWITTER_WIDGETS`** set to `true` to enable twitter widgets on the client-admin authentication pages.
-- **`FB_APP_ID`** Must register with Facebook to get an ID to enable Facebook App connectivity.
 - **`GA_TRACKING_ID`** For using Google Analytics on client pages.
 - **`GOOGLE_CREDENTIALS_BASE64`** Required if using Google Translate API. (See below).
 - **`GOOGLE_CREDS_STRINGIFIED`** Alternative to **`GOOGLE_CREDENTIALS_BASE64`** (See below).
 - **`MAILGUN_API_KEY`**, **`MAILGUN_DOMAIN`** If using Mailgun as an email transport.
-- **`TWITTER_CONSUMER_KEY`**, **`TWITTER_CONSUMER_SECRET`** For Twitter integration.
-- **`AWS_ACCESS_KEY_ID`**, **`AWS_SECRET_ACCESS_KEY`** If using Amazon SES as an email transport.
+- **`AWS_REGION`** Used for some data import/export.
+- **`AWS_ACCESS_KEY_ID`**, **`AWS_SECRET_ACCESS_KEY`** Useful for AWS SDK operations.
+- **`ANTHROPIC_API_KEY`** For using Anthropic as a generative AI model.
+- **`GEMINI_API_KEY`** For using Gemini as a generative AI model.
+- **`OPENAI_API_KEY`** For using OpenAI as a generative AI model.
 
 ### Deprecated
 

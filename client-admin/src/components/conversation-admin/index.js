@@ -37,8 +37,10 @@ class ConversationAdminContainer extends React.Component {
     this.resetMetadata()
   }
 
-  componentDidUpdate() {
-    this.loadZidMetadata()
+  componentDidUpdate(prevProps) {
+    if (prevProps.match.params.conversation_id !== this.props.match.params.conversation_id) {
+      this.loadZidMetadata()
+    }
   }
 
   render() {
@@ -99,7 +101,7 @@ class ConversationAdminContainer extends React.Component {
             </Link>
           </Box>
         </Box>
-        <Box sx={{ p: [4], flex: '0 0 auto', maxWidth: '35em', mx: [4] }}>
+        <Box sx={{ p: [4], flex: '0 0 auto', maxWidth: '60em', mx: [4] }}>
           <Switch>
             <Route
               exact

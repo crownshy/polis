@@ -39,9 +39,8 @@ const App = (props) => {
   const [comments, setComments] = useState(null);
   const [participants, setParticipants] = useState(null);
   const [conversation, setConversation] = useState(null);
-  const [groupDemographics, setGroupDemographics] = useState(null);
   const [colorBlindMode, setColorBlindMode] = useState(false);
-  const [model, setModel] = useState("claude");
+  const [model, setModel] = useState("openai");
   const [isNarrativeReport, setIsNarrativeReport] = useState(
     window.location.pathname.split("/")[1] === "narrativeReport"
   );
@@ -83,7 +82,12 @@ const App = (props) => {
   const [searchParamsModel, setSearchParamModel] = useState(
     window.location.search.includes("model=")
       ? window.location.search.split("model=")[1]?.split("&")[0]
-      : null
+      : "openai"
+  );
+  const [searchParamsCache, setSearchParamCache] = useState(
+    window.location.search.includes("noCache=")
+      ? window.location.search.split("noCache=")[1]?.split("&")[0]
+      : "false"
   );
 
   let corMatRetries;
@@ -101,6 +105,7 @@ const App = (props) => {
     const urlParams = new URLSearchParams(queryString);
     if (urlParams.get("section")) setSearchParamsSection(urlParams.get("section"));
     if (urlParams.get("model")) setSearchParamModel(urlParams.get("model"));
+    if (urlParams.get("noCache")) setSearchParamCache(urlParams.get("noCache"));
   }, [window.location?.pathname, window.location?.search]);
 
   useEffect(() => {
@@ -150,8 +155,6 @@ const App = (props) => {
       report_id: report_id,
       moderation: true,
       mod_gt: isStrictMod ? 0 : -1,
-      //include_social: true,
-      //include_demographics: true,
       include_voting_patterns: true,
     });
   };
@@ -169,48 +172,63 @@ const App = (props) => {
 
   const getNarrative = async (report_id) => {
     const urlPrefix = URLs.urlPrefix;
-    const response = await fetch(
-      `${urlPrefix}api/v3/reportNarrative?report_id=${report_id}${
-        searchParamsSection ? `&section=${searchParamsSection}` : ``
-      }${searchParamsModel ? `&model=${searchParamsModel}` : ``}`,
-      {
-        credentials: "include",
-        method: "get",
-        headers: {
-          Accept: "application/json, text/plain, */*",
-          "Content-Type": "application/json",
-        },
+    try {
+      const response = await fetch(
+        `${urlPrefix}api/v3/reportNarrative?report_id=${report_id}${
+          searchParamsSection ? `&section=${searchParamsSection}` : ``
+        }${searchParamsModel ? `&model=${searchParamsModel}` : ``}${searchParamsCache ? `&noCache=${searchParamsCache}` : ``}`,
+        {
+          credentials: "include",
+          method: "get",
+          headers: {
+            Accept: "application/json, text/plain, */*",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
-    if (!response.ok || !response.body) {
-      throw response.statusText;
-    }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    const loopRunner = true;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-    while (loopRunner) {
-      // streaming response - the loop will run indefinetly until the response ends - this is a streaming function to improve UX and prevent cloud runners (like heroku) from terminating a long running http request
-      const { value, done } = await reader.read();
-      if (done) {
-        break;
-      }
-      const decodedChunk = decoder.decode(value, { stream: true });
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
 
-      if (!decodedChunk.includes("POLIS-PING:")) {
-        decodedChunk.split(`|||`).filter(Boolean).forEach((j) => {
-          try {
-            const c = JSON.parse(j);
-            setNarrative((prevNarrative) => ({
-              ...(prevNarrative || {}),
-              ...c,
-            }))
-          } catch (error) {
-            console.log(error, j)
+          if (done) break;
+
+          const decodedChunk = decoder.decode(value, { stream: true });
+
+          if (!decodedChunk.includes("POLIS-PING:")) {
+            decodedChunk
+              .split(`|||`)
+              .filter(Boolean)
+              .forEach((j) => {
+                try {
+                  const chunk = JSON.parse(j);
+                  setNarrative((prevNarrative) => {
+                    const nextNarrative = { ...prevNarrative, ...chunk };
+                    return nextNarrative;
+                  });
+                } catch (error) {
+                  console.warn("Error parsing narrative chunk:", error);
+                }
+              });
           }
-        });
+        }
+      } catch (streamError) {
+        console.warn("Stream was interrupted:", streamError);
+        // Optionally retry or handle the interruption
+        // You could set a flag in state to show a "Connection interrupted" message
+      } finally {
+        reader.releaseLock();
       }
+    } catch (error) {
+      console.error("Failed to fetch narrative:", error);
+      // Handle the error appropriately - maybe set an error state
     }
   };
 
@@ -225,12 +243,6 @@ const App = (props) => {
         }
         return null;
       });
-  };
-  const getGroupDemographics = (conversation_id) => {
-    return net.polisGet("/api/v3/group_demographics", {
-      conversation_id: conversation_id,
-      report_id: report_id,
-    });
   };
 
   const getConversationStats = (conversation_id) => {
@@ -289,9 +301,6 @@ const App = (props) => {
         return getComments(report.conversation_id, conv.strict_moderation);
       });
     });
-    const groupDemographicsPromise = reportPromise.then((report) => {
-      return getGroupDemographics(report.conversation_id);
-    });
     const participantsOfInterestPromise = reportPromise.then((report) => {
       return getParticipantsOfInterest(report.conversation_id);
     });
@@ -313,7 +322,6 @@ const App = (props) => {
       reportPromise,
       mathPromise,
       commentsPromise,
-      groupDemographicsPromise,
       participantsOfInterestPromise,
       matrixPromise,
       conversationPromise,
@@ -324,7 +332,6 @@ const App = (props) => {
           _report,
           mathResult,
           _comments,
-          _groupDemographics,
           _participants,
           correlationHClust,
           _conversation,
@@ -484,7 +491,6 @@ const App = (props) => {
           })
         );
         setComments(_comments);
-        setGroupDemographics(_groupDemographics);
         setParticipants(_participants);
         setConversation(_conversation);
         setPtptCount(_ptptCount);
@@ -498,7 +504,7 @@ const App = (props) => {
         setFormatTid(() => _formatTid);
         setReport(_report);
         setComputedStats(_computedStats);
-        setNothingToShow(!_comments.length || !_groupDemographics.length);
+        setNothingToShow(!_comments.length);
       })
       .catch((err) => {
         console.error(err);
@@ -522,7 +528,6 @@ const App = (props) => {
         height: window.innerHeight,
       });
     }
-
     let resizeTimeout;
     window.addEventListener("resize", () => {
       clearTimeout(resizeTimeout);
@@ -609,7 +614,6 @@ const App = (props) => {
             ptptCountTotal={ptptCountTotal}
             math={math}
             computedStats={computedStats}
-            demographics={groupDemographics}
           />
         )}
 
@@ -620,7 +624,6 @@ const App = (props) => {
             comments={comments}
             ptptCount={ptptCount}
             ptptCountTotal={ptptCountTotal}
-            demographics={groupDemographics}
             conversation={conversation}
             voteColors={voteColors}
           />
@@ -725,7 +728,6 @@ const App = (props) => {
             <ParticipantGroups
               comments={comments}
               conversation={conversation}
-              demographics={groupDemographics}
               ptptCount={ptptCount}
               groupNames={groupNames}
               formatTid={formatTid}

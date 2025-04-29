@@ -3,6 +3,7 @@ describe('Comment translation', function () {
   const commentEnglish = 'This statement is in French.'
 
   before(function () {
+    cy.ensureUser('admin')
     cy.createConvo().then(() => {
       cy.seedComment(this.convoId, commentFrench)
     })

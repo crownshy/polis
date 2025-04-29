@@ -50,8 +50,8 @@ export function getPidsForGid(zid: any, gid: number, math_tick: number) {
     for (var i = 0; i < members.length; i++) {
       let bid = members[i];
       let index = bidToIndex[bid];
-      let morePids = indexToPids[index];
-      Array.prototype.push.apply(pids, morePids);
+      let morePids = indexToPids ? indexToPids[index] : null;
+      if (morePids) Array.prototype.push.apply(pids, morePids);
     }
     pids = pids.map(function (x) {
       return parseInt(x);

@@ -10,10 +10,6 @@ export function generateRandomUser() {
   }
 }
 
-export function generateRandomUsers(count) {
-  return Array.from({ length: count }, generateRandomUser)
-}
-
 export function readTranslation(lang, key = 'writePrompt') {
   const filename = locales[lang]
   return cy
@@ -35,7 +31,7 @@ export function readTranslation(lang, key = 'writePrompt') {
 const locales = {
   // <lang>: <filename>
   ar: 'ar',
-  bs: 'hr',
+  bs: 'bs',
   cy: 'cy',
   da: 'da_dk',
   de: 'de_de',

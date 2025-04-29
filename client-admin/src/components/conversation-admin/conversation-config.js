@@ -15,7 +15,6 @@ import emoji from 'react-easy-emoji'
 
 import { CheckboxField } from './CheckboxField'
 import ModerateCommentsSeed from './seed-comment'
-// import ModerateCommentsSeedTweet from "./seed-tweet";
 
 @connect((state) => state.user)
 @connect((state) => state.zid_metadata)
@@ -76,10 +75,11 @@ class ConversationConfig extends React.Component {
         </CheckboxField>
 
         <Box sx={{ mb: [3] }}>
-          <Text sx={{ mb: [2] }}>Topic</Text>
+          <Text sx={{ display: 'block', mb: [2] }}>Topic</Text>
           <input
             ref={(c) => (this.topic = c)}
             sx={{
+              display: 'block',
               fontFamily: 'body',
               fontSize: [2],
               width: '35em',
@@ -96,10 +96,11 @@ class ConversationConfig extends React.Component {
         </Box>
 
         <Box sx={{ mb: [3] }}>
-          <Text sx={{ mb: [2] }}>Description</Text>
+          <Text sx={{ display: 'block', mb: [2] }}>Description</Text>
           <textarea
             ref={(c) => (this.description = c)}
             sx={{
+              display: 'block',
               fontFamily: 'body',
               fontSize: [2],
               width: '35em',
@@ -129,10 +130,6 @@ class ConversationConfig extends React.Component {
         <ModerateCommentsSeed
           params={{ conversation_id: this.props.zid_metadata.conversation_id }}
         />
-
-        {/* <ModerateCommentsSeedTweet
-          params={{ conversation_id: this.props.zid_metadata.conversation_id }}
-        /> */}
 
         <Heading
           as="h6"

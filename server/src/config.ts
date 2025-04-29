@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-properties */
 import fs from "fs";
 import isTrue from "boolean";
 
@@ -67,25 +68,32 @@ export default {
   adminEmails: process.env.ADMIN_EMAILS || "[]",
   adminUIDs: process.env.ADMIN_UIDS || "[]",
   akismetAntispamApiKey: process.env.AKISMET_ANTISPAM_API_KEY || null,
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || null,
   applicationName: process.env.APPLICATION_NAME || null,
-  awsRegion: process.env.AWS_REGION as string,
+  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || 'local' as string,
+  awsRegion: process.env.AWS_REGION || 'local' as string,
+  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'local' as string,
   backfillCommentLangDetection: isTrue(
     process.env.BACKFILL_COMMENT_LANG_DETECTION
   ),
   cacheMathResults: isTrueOrBlank(process.env.CACHE_MATH_RESULTS),
   databaseSSL: isTrue(process.env.DATABASE_SSL),
   databaseURL: process.env.DATABASE_URL as string,
+  dynamoDbEndpoint: process.env.DYNAMODB_ENDPOINT || null,
   emailTransportTypes: process.env.EMAIL_TRANSPORT_TYPES || null,
   encryptionPassword: process.env.ENCRYPTION_PASSWORD_00001 as string,
-  fbAppId: process.env.FB_APP_ID || null,
+  geminiApiKey: process.env.GEMINI_API_KEY || null,
+  googleApiKey: process.env.GOOGLE_API_KEY || null,
   googleJigsawPerspectiveApiKey:
     process.env.GOOGLE_JIGSAW_PERSPECTIVE_API_KEY || null,
   logLevel: process.env.SERVER_LOG_LEVEL as string,
   logToFile: isTrue(process.env.SERVER_LOG_TO_FILE),
   mailgunApiKey: process.env.MAILGUN_API_KEY || null,
   mailgunDomain: process.env.MAILGUN_DOMAIN || null,
+  maxReportCacheDuration: parseInt(process.env.MAX_REPORT_CACHE_DURATION || "3600000", 10),
   mathEnv: process.env.MATH_ENV as string,
   nodeEnv: process.env.NODE_ENV as string,
+  openaiApiKey: process.env.OPENAI_API_KEY || null,
   polisFromAddress: process.env.POLIS_FROM_ADDRESS as string,
   readOnlyDatabaseURL:
     process.env.READ_ONLY_DATABASE_URL || (process.env.DATABASE_URL as string),
@@ -93,19 +101,18 @@ export default {
   shouldUseTranslationAPI: setGoogleApplicationCredentials(),
   staticFilesAdminPort: parseInt(
     process.env.STATIC_FILES_ADMIN_PORT ||
-      process.env.STATIC_FILES_PORT ||
-      "8080",
+    process.env.STATIC_FILES_PORT ||
+    "8080",
     10
   ),
   staticFilesParticipationPort: parseInt(
     process.env.STATIC_FILES_PARTICIPATION_PORT ||
-      process.env.STATIC_FILES_PORT ||
-      "8080",
+    process.env.STATIC_FILES_PORT ||
+    "8080",
     10
   ),
   staticFilesHost: process.env.STATIC_FILES_HOST as string,
-  twitterConsumerKey: process.env.TWITTER_CONSUMER_KEY || null,
-  twitterConsumerSecret: process.env.TWITTER_CONSUMER_SECRET || null,
+  useNetworkHost: isTrue(process.env.USE_NETWORK_HOST),
   webserverPass: process.env.WEBSERVER_PASS as string,
   webserverUsername: process.env.WEBSERVER_USERNAME as string,
 

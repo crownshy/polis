@@ -7,7 +7,7 @@
 # For a dev build, use `--target dev`.
 # Should default to prod build, but you can also explicitly use `--target prod`
 
-FROM docker.io/node:18-alpine as base
+FROM docker.io/node:20-alpine as base
 
 ARG NODE_ENV
 
@@ -47,6 +47,9 @@ FROM base as prod
 
 # Set default NODE_ENV to production unless overridden at build time with --build-arg NODE_ENV=development
 ENV NODE_ENV ${NODE_ENV:-production}
+
+# Install OpenSSL and CA Certificates (CRITICAL for production)
+RUN apk add --no-cache openssl ca-certificates
 
 RUN npm ci --production=false
 

@@ -95,13 +95,21 @@ Conversation participants may opt to use third party data collector and processo
 
 ### Technical Infrastructure
 
-* We use Akismet spam filter to filter out spam comments (can be configured through administrative access). Information about how Akismet uses your data when you use our Site can be found at: <https://automattic.com/privacy>
+* We use Akismet spam filter to filter out spam comments (can be configured through administrative access). Information about how Akismet uses your data when you use our Site can be found at: <https://automattic.com/privacy/>
 * We use Heroku’s web hosting services, including a hosted Postgres database, where we store all information. Information about how Heroku uses this data when you use our Site can be found at: <https://www.salesforce.com/company/privacy/>
 * We use Logentries for server logs, which may include personal information such as IP address necessary for debugging production issues. Information about how Logentries uses this data when you use our Site can be found at: <https://www.rapid7.com/privacy-policy/>
-* We use Amazon Web Services Simple Email Service for sending account confirmation and notification emails to users. We also use AWS Simple Storage Service for. Information about how AWS handles: <https://aws.amazon.com/privacy/>
+* We use Amazon Web Services Simple Email Service for sending account confirmation and notification emails to users. We also use AWS Simple Storage Service (S3) for securely storing and managing data, ensuring reliability, scalability, and compliance with industry-standard security measures. Information about how AWS handles data can be found at: <https://aws.amazon.com/privacy/>
 * We use Google Translate for automatic machine translation of comments, and Google Analytics for site usage statistics. Information about how Google uses this data when you use our Site can be found at: <https://policies.google.com/privacy>
+* We use Google Vertex AI for machine learning workloads, including model training and inference. Information about how Google handles data within Vertex AI can be found at: <https://cloud.google.com/vertex-ai/docs/general/privacy>
 * We use Jigsaw Perspective API for comment moderation. This service analyzes the content of comments to detect potentially toxic or inappropriate language. Information about how Perspective API handles data can be found at: <https://www.perspectiveapi.com/>
 * We pass all Site web requests through a Cloudflare caching proxy. No personal information is cached at this level. Information about how Cloudflare uses your data can be found at: <https://www.cloudflare.com/privacypolicy/>
+* We use OpenAI, Anthropic, and Gemini large language models (LLMs) to analyze and contextualize data as part of the output of a Polis report. Information about how these services handle data can be found at:
+  - OpenAI: <https://openai.com/enterprise-privacy>
+  - Anthropic: <https://www.anthropic.com/privacy>
+  - Google Gemini: <https://policies.google.com/privacy>
+* We use GitHub for storing and managing source code repositories. Information about how GitHub handles data can be found at: <https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement>
+* We use Docker to manage containers, including specific images from the public repository. Our containers are not public, but we rely on publicly available images. Information about how Docker handles data can be found at: <https://www.docker.com/legal/privacy>
+* We use NPM packages from the NPM public registry to facilitate various tasks within our client-facing application. Information about how NPM handles data can be found at: <https://www.npmjs.com/policies/privacy>
 
 ## Public Areas and Syndicated Services
 

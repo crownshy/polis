@@ -1,5 +1,5 @@
 import _ from "underscore";
-import Translate from "@google-cloud/translate";
+const { Translate } = require("@google-cloud/translate").v2;
 
 import pg from "./db/pg-query";
 import SQL from "./db/sql";
@@ -27,7 +27,7 @@ type Docs = {
 };
 
 const useTranslateApi: boolean = Config.shouldUseTranslationAPI;
-const translateClient = useTranslateApi ? Translate() : null;
+const translateClient = useTranslateApi ? new Translate() : null;
 
 function getComment(zid: Id, tid: Id) {
   return (
@@ -60,7 +60,6 @@ function getComments(o: CommentType) {
         "tid",
         "created",
         "uid",
-        "tweet_id",
         "quote_src_url",
         "anon",
         "is_seed",
@@ -153,7 +152,7 @@ function _getCommentsForModerationList(o: {
       .queryP_metered_readOnly(
         "_getCommentsForModerationList",
         "select * from (select tid, vote, count(*) from votes_latest_unique where zid = ($1) group by tid, vote) as foo full outer join comments on foo.tid = comments.tid where comments.zid = ($1)" +
-          modClause,
+        modClause,
         params
       )
       .then((rows: Row[]) => {
@@ -281,11 +280,11 @@ function _getCommentsList(o: {
 function getNumberOfCommentsRemaining(zid: any, pid: any) {
   return pg.queryP(
     "with " +
-      "v as (select * from votes_latest_unique where zid = ($1) and pid = ($2)), " +
-      "c as (select * from get_visible_comments($1)), " +
-      "remaining as (select count(*) as remaining from c left join v on c.tid = v.tid where v.vote is null), " +
-      "total as (select count(*) as total from c) " +
-      "select cast(remaining.remaining as integer), cast(total.total as integer), cast(($2) as integer) as pid from remaining, total;",
+    "v as (select * from votes_latest_unique where zid = ($1) and pid = ($2)), " +
+    "c as (select * from get_visible_comments($1)), " +
+    "remaining as (select count(*) as remaining from c left join v on c.tid = v.tid where v.vote is null), " +
+    "total as (select count(*) as total from c) " +
+    "select cast(remaining.remaining as integer), cast(total.total as integer), cast(($2) as integer) as pid from remaining, total;",
     [zid, pid]
   );
 }
@@ -295,20 +294,19 @@ function translateAndStoreComment(zid: any, tid: any, txt: any, lang: any) {
     return translateString(txt, lang).then((results: any[]) => {
       const translation = results[0];
       const src = -1; // Google Translate of txt with no added context
-      return (
-        pg
-          .queryP(
-            "insert into comment_translations (zid, tid, txt, lang, src) values ($1, $2, $3, $4, $5) returning *;",
-            [zid, tid, translation, lang, src]
-          )
-          //       Argument of type '(rows: Row[]) => Row' is not assignable to parameter of type '(value: unknown) => Row | PromiseLike<Row>'.
-          // Types of parameters 'rows' and 'value' are incompatible.
-          //   Type 'unknown' is not assignable to type 'Row[]'.ts(2345)
-          // @ts-ignore
-          .then((rows: Row[]) => {
-            return rows[0];
-          })
-      );
+      return pg
+        .queryP(
+          "insert into comment_translations (zid, tid, txt, lang, src) values ($1, $2, $3, $4, $5) " +
+          "on conflict (zid, tid, src, lang) do update set " +
+          "txt = excluded.txt, " +
+          "modified = now_as_millis() " +
+          "returning *;",
+          [zid, tid, translation, lang, src]
+        )
+        // @ts-ignore
+        .then((rows: Row[]) => {
+          return rows[0];
+        });
     });
   }
   return Promise.resolve(null);

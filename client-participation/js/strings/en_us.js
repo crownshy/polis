@@ -5,7 +5,7 @@ var s = {};
 // Text on the card
 
 s.participantHelpWelcomeText =
-  "Welcome to a new kind of conversation — </b>vote</b>on other people's statements — </b> the more the better.</b>";
+  "Welcome to a new kind of conversation — </b>vote</b> on other people's statements — </b> the more the better.</b>";
 
 s.agree = "Agree";
 s.disagree = "Disagree";
@@ -16,7 +16,6 @@ s.anonPerson = "Anonymous";
 s.importantCheckbox = "Important/Significant";
 s.importantCheckboxDesc =
   "Check this box if you believe this statement is especially important to you or is highly relevant to the conversation, irrespective of your vote. It will give this statement higher priority compared to your other votes in the conversation analysis.";
-
 s.howImportantPrompt = "How important is this statement?";
 s.howImportantLow = "Low";
 s.howImportantMedium = "Medium";
@@ -29,7 +28,6 @@ s.modSubmitInitialState = "Skip (none of the above), next statement";
 s.modSubmit = "Done, next statement";
 
 s.x_wrote = "wrote:";
-s.x_tweeted = "tweeted:";
 s.comments_remaining = "{{num_comments}} remaining";
 s.comments_remaining2 = "{{num_comments}} remaining statements";
 
@@ -92,7 +90,7 @@ s.helpWhatDoIDoTitle = " What do I do?";
 s.helpWhatDoIDo =
   "Vote on other people's statements by clicking 'agree' or 'disagree'. Write a statement (keep each to a single idea). Invite your friends to the conversation!";
 s.writeCommentHelpText =
-  "Are your perspectives or experiences missing from the conversation? If so,</b>add them </b> in the box below — </b>one at a time</b>.";
+  "Are your perspectives or experiences missing from the conversation? If so, </b>add them </b> in the box below — </b>one at a time</b>.";
 s.helpWriteListIntro = "What makes for a good statement?";
 s.helpWriteListStandalone = "A stand-alone idea";
 s.helpWriteListRaisNew = "A new perspective, experience, or issue";
@@ -127,23 +125,6 @@ s.commentErrorConversationClosed =
 s.commentIsEmpty = "Statement is empty";
 s.commentIsTooLong = "Statement is too long";
 s.hereIsNextStatement = "Vote success. Navigate up to see the next statement.";
-
-// Text about connecting identity
-
-s.connectFacebook = "Connect Facebook";
-s.connectTwitter = "Connect Twitter";
-s.connectToPostPrompt =
-  "Connect an identity to submit a statement. We will not post to your timeline.";
-s.connectToVotePrompt =
-  "Connect an identity to vote. We will not post to your timeline.";
-s.socialConnectPrompt =
-  "Optionally connect to see friends and people you follow in the visualization.";
-s.connectFbButton = "Connect with Facebook";
-s.connectTwButton = "Connect with Twitter";
-s.polis_err_reg_fb_verification_email_sent =
-  "Please check your email for a verification link, then return here to continue.";
-s.polis_err_reg_fb_verification_noemail_unverified =
-  "Your Facebook account is unverified. Please verify your email address with Facebook, then return here to continue.";
 
 // Text for the third party translation that appears on the cards
 

@@ -9,6 +9,8 @@ import { Sensemaker } from "@tevko/sensemaking-tools/src/sensemaker";
 import { GoogleAIModel } from "@tevko/sensemaking-tools/src/models/aiStudio_model";
 import { Comment, VoteTally, Topic } from "@tevko/sensemaking-tools/src/types";
 import { parse } from "csv-parse";
+import config from "../../config";
+import logger from "../../utils/logger";
 
 async function parseCsvString(csvString: string) {
   return new Promise((resolve, reject) => {
@@ -53,6 +55,9 @@ async function parseCsvString(csvString: string) {
 
 export async function getTopicsFromRID(zId: number) {
   try {
+    if (!config.geminiApiKey) {
+      throw new Error("polis_err_gemini_api_key_not_set");
+    }
     const resp = await sendCommentGroupsSummary(zId, undefined, false);
     const modified = (resp as string).split("\n");
     modified[0] = `comment-id,comment_text,total-votes,total-agrees,total-disagrees,total-passes,group-a-votes,group-0-agree-count,group-0-disagree-count,group-0-pass-count,group-b-votes,group-1-agree-count,group-1-disagree-count,group-1-pass-count`;
@@ -60,13 +65,13 @@ export async function getTopicsFromRID(zId: number) {
     const comments = await parseCsvString(modified.join("\n"));
     const topics = await new Sensemaker({
       defaultModel: new GoogleAIModel(
-        process.env.GEMINI_API_KEY as string,
+        config.geminiApiKey,
         "gemini-exp-1206"
       ),
     }).learnTopics(comments as Comment[], false);
     const categorizedComments = await new Sensemaker({
       defaultModel: new GoogleAIModel(
-        process.env.GEMINI_API_KEY as string,
+        config.geminiApiKey,
         "gemini-1.5-flash-8b"
       ),
     }).categorizeComments(comments as Comment[], false, topics);
@@ -89,7 +94,7 @@ export async function getTopicsFromRID(zId: number) {
       citations: value.citations,
     }));
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return [];
   }
 }

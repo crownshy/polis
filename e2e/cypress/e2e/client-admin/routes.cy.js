@@ -1,14 +1,13 @@
 describe('Routes', function () {
-  before(function () {
-    cy.ensureConversation().then(() => {
-      cy.wrap(`/m/${this.convoId}`).as('adminPath')
-    })
-  })
-
   beforeEach(function () {
     cy.ensureUser('moderator')
     cy.intercept('/api/v3/conversations*').as('getConversations')
     cy.intercept('/api/v3/users*').as('getUsers')
+
+    // Create a conversation owned by the current user
+    cy.createConvo('Route Test', 'Testing routes').then(() => {
+      cy.wrap(`/m/${this.convoId}`).as('adminPath')
+    })
   })
 
   it('Page renders without trailing slash for /m/:id', function () {
@@ -33,7 +32,7 @@ describe('Routes', function () {
     cy.wait('@getConversations')
 
     cy.location('pathname').should('eq', sharePath)
-    cy.get('h3').should('have.text', 'Distribute')
+    cy.contains('h3', 'Distribute').should('exist')
   })
 
   it('Page strips trailing slash from /m/:id/comments/accepted/', function () {

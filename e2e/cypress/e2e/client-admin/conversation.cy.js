@@ -66,6 +66,7 @@ describe('Conversation: Configure', function () {
 
   describe('Conversation Participation', function () {
     beforeEach(function () {
+      cy.ensureUser('moderator')
       cy.createConvo().then(() => {
         cy.visit('/m/' + this.convoId)
         cy.wait('@getConversations')
@@ -103,11 +104,13 @@ describe('Conversation: Configure', function () {
       const specialTopic = 'Test & Topic with $pecial <characters>'
       const specialDesc = '!@#$%^&*() Special description 你好'
 
-      cy.get('input[data-test-id="topic"]').clear().type(specialTopic)
+      cy.get('input[data-test-id="topic"]').clear()
+      cy.get('input[data-test-id="topic"]').type(specialTopic)
       cy.get('input[data-test-id="topic"]').then(() => cy.focused().blur())
       cy.wait('@updateConversation')
 
-      cy.get('textarea[data-test-id="description"]').clear().type(specialDesc)
+      cy.get('textarea[data-test-id="description"]').clear()
+      cy.get('textarea[data-test-id="description"]').type(specialDesc)
       cy.get('textarea[data-test-id="description"]').then(() => cy.focused().blur())
       cy.wait('@updateConversation')
 
@@ -120,6 +123,7 @@ describe('Conversation: Configure', function () {
 
   describe('Conversation Settings', function () {
     beforeEach(function () {
+      cy.ensureUser('moderator')
       cy.createConvo().then(() => cy.visit('/m/' + this.convoId))
       cy.wait('@getConversations')
     })
@@ -134,6 +138,7 @@ describe('Conversation: Configure', function () {
 
   describe('Closing a Conversation', function () {
     beforeEach(function () {
+      cy.ensureUser('moderator')
       cy.createConvo().then(() => cy.visit('/m/' + this.convoId))
       cy.wait('@getConversations')
       cy.get('input[data-test-id="topic"]').type('Test topic')
