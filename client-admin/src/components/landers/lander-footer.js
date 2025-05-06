@@ -17,6 +17,10 @@ class Header extends Component {
           Polis is built for the public with {emoji('❤️')} in Seattle{' '}
           {emoji('🇺🇸')}, with contributions from around the {emoji('🌍🌏🌎')}
         </Box>
+        <Box>
+          CrownShy operates a modified, unaffiliated version of the Polis code. All modifications
+          to the original polis code base can be found at <a href="https://github.com/crownshy/polis">https://github.com/crownshy/polis</a>.
+        </Box>
         <Box sx={{ mb: [2, null, 3] }}>
           © {new Date().getFullYear()} The Authors <Link href="tos">TOS</Link>{' '}
           <Link href="privacy">Privacy</Link>
