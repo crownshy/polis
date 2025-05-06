@@ -5,10 +5,17 @@ import StaticLayout from './lander-layout'
 import TOSContent from '../../content/tos.md'
 
 class TOS extends React.Component {
+  componentDidMount(){
+    const script = document.createElement("script");
+    script.src = "https://app.termly.io/embed-policy.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }
+
   render() {
     return (
       <StaticLayout>
-        <TOSContent />
+       <div name="termly-embed" data-id="f85de737-c18d-4971-8714-0a7b114111b7"></div>
       </StaticLayout>
     )
   }
