@@ -15,7 +15,7 @@ class TOS extends React.Component {
   render() {
     return (
       <StaticLayout>
-       <div name="termly-embed" data-id="f85de737-c18d-4971-8714-0a7b114111b7"></div>
+       <div name="termly-embed" data-id="f172c6e1-6fa4-4542-8df3-70401e6f76e3"></div>
       </StaticLayout>
     )
   }
