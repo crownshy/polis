@@ -5,10 +5,17 @@ import StaticLayout from './lander-layout'
 import PrivacyContent from '../../content/privacy.md'
 
 class Privacy extends React.Component {
+
+  componentDidMount(){
+    const script = document.createElement("script");
+    script.src = "https://app.termly.io/embed-policy.min.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }
   render() {
     return (
       <StaticLayout>
-        <PrivacyContent />
+       <div name="termly-embed" data-id="f85de737-c18d-4971-8714-0a7b114111b7"></div>
       </StaticLayout>
     )
   }
