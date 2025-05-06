@@ -15,7 +15,7 @@ class Privacy extends React.Component {
   render() {
     return (
       <StaticLayout>
-       <div name="termly-embed" data-id="f85de737-c18d-4971-8714-0a7b114111b7"></div>
+        <div name="termly-embed" data-id="f85de737-c18d-4971-8714-0a7b114111b7"></div>
       </StaticLayout>
     )
   }
