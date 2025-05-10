@@ -2,7 +2,7 @@
 
 var s = {};
 
-// Text on the card
+// Text on the card for example
 
 s.participantHelpWelcomeText =
   'مرحبًا بكم في نوع جديد من المحادثات حول بلدنا - صوتوا على إفادات كتبها سوريون آخرون، صوتوا على أكبر قدر من الإفادات التي يسمح بها وقتكم'
