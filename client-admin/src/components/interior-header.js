@@ -8,7 +8,7 @@ class InteriorHeader extends React.Component {
   render() {
     return (
       <Box>
-        <Box
+        {/* <Box
           sx={{
             width: '100%',
             backgroundColor: 'primary',
@@ -30,7 +30,7 @@ class InteriorHeader extends React.Component {
           <Link id="signoutLink" sx={{ variant: 'links.header' }} to="/signout">
             sign out
           </Link>
-        </Box>
+        </Box>*/}
         <Box>{this.props.children}</Box>
       </Box>
     )

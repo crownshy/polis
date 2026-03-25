@@ -2,6 +2,8 @@
 
 /** @jsx jsx */
 
+import ModerateCommentsAccepted from './comment-moderation/moderate-comments-accepted'
+import { populateAllCommentStores } from '../../actions'
 import React from 'react'
 import { connect } from 'react-redux'
 import {
@@ -9,6 +11,7 @@ import {
   optimisticZidMetadataUpdateOnTyping
 } from '../../actions'
 import ComponentHelpers from '../../util/component-helpers'
+import ModerateComments from "./comment-moderation"
 import NoPermission from './no-permission'
 import { Heading, Box, Text, jsx } from 'theme-ui'
 import emoji from 'react-easy-emoji'
@@ -17,9 +20,46 @@ import { CheckboxField } from './CheckboxField'
 import ModerateCommentsSeed from './seed-comment'
 // import ModerateCommentsSeedTweet from "./seed-tweet";
 
+
+const mapStateToProps = (state, ownProps) => {
+  return {
+    // unmoderated: state.mod_comments_unmoderated,
+    // accepted: state.mod_comments_accepted,
+    // rejected: state.mod_comments_rejected,
+
+    unmoderated: state.mod_comments_unmoderated,
+    accepted: state.mod_comments_accepted,
+    rejected: state.mod_comments_rejected,
+    seedComments: state.seed_comments
+  }
+}
+
+const pollFrequency = 2000
+
 @connect((state) => state.user)
 @connect((state) => state.zid_metadata)
+@connect(mapStateToProps)
 class ConversationConfig extends React.Component {
+
+  loadComments() {
+    const { match } = this.props
+    this.props.dispatch(populateAllCommentStores(match.params.conversation_id))
+  }
+
+  componentWillMount() {
+    this.getCommentsRepeatedly = setInterval(() => {
+      this.loadComments()
+    }, pollFrequency)
+  }
+
+  componentDidMount() {
+    this.loadComments()
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.getCommentsRepeatedly)
+  }
+
   handleStringValueChange(field) {
     return () => {
       let val = this[field].value
@@ -53,15 +93,18 @@ class ConversationConfig extends React.Component {
 
     return (
       <Box>
+        {/*
         <Heading
           as="h3"
-          sx={{
+        sx={{
             fontSize: [3, null, 4],
             lineHeight: 'body',
             mb: [3, null, 4]
           }}>
           Configure
         </Heading>
+        */}
+
         <Box sx={{ mb: [4] }}>
           {this.props.loading ? (
             <Text>{emoji('💾')} Saving</Text>
@@ -75,6 +118,7 @@ class ConversationConfig extends React.Component {
           Conversation is open. Unchecking disables both voting and commenting.
         </CheckboxField>
 
+        {/*
         <Box sx={{ mb: [3] }}>
           <Text sx={{ mb: [2] }}>Topic</Text>
           <input
@@ -94,7 +138,8 @@ class ConversationConfig extends React.Component {
             defaultValue={this.props.zid_metadata.topic}
           />
         </Box>
-
+        */}
+        {/*
         <Box sx={{ mb: [3] }}>
           <Text sx={{ mb: [2] }}>Description</Text>
           <textarea
@@ -126,14 +171,20 @@ class ConversationConfig extends React.Component {
           }}>
           Seed Comments
         </Heading>
+        */}
+
         <ModerateCommentsSeed
           params={{ conversation_id: this.props.zid_metadata.conversation_id }}
         />
 
+        <ModerateCommentsAccepted show_meta={false} dispatch={this.props.dispatch} accepted_comments={this.props.accepted} />
+
+
+
         {/* <ModerateCommentsSeedTweet
           params={{ conversation_id: this.props.zid_metadata.conversation_id }}
         /> */}
-
+        {/*
         <Heading
           as="h6"
           sx={{
@@ -170,6 +221,7 @@ class ConversationConfig extends React.Component {
           notifications when there are new comments to vote on.
         </CheckboxField>
 
+
         <Heading
           as="h6"
           sx={{
@@ -179,6 +231,7 @@ class ConversationConfig extends React.Component {
           }}>
           Schemes
         </Heading>
+        */}
 
         <CheckboxField field="strict_moderation">
           No comments shown without moderator approval

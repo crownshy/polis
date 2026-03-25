@@ -230,7 +230,13 @@ export const doSignin = (attrs) => {
           // Force page to load so we can be sure the password is cleared from memory
           // delay a bit so the cookie has time to set
           dispatch({ type: 'signin completed successfully' })
-          window.location = '/'
+          if (attrs.noRedirect) {
+            window.location.reload()
+          }
+          else {
+            window.location = '/'
+          }
+
         }, 3000)
       },
       (err) => dispatch(signinError(err))
@@ -1015,9 +1021,9 @@ const fetchAllComments = (conversation_id) => {
   const includeSocial = ''
   return $.get(
     '/api/v3/comments?moderation=true&include_voting_patterns=false&' +
-      includeSocial +
-      'conversation_id=' +
-      conversation_id
+    includeSocial +
+    'conversation_id=' +
+    conversation_id
   )
 }
 
@@ -1056,9 +1062,9 @@ const mathFetchError = (err) => {
 const fetchMath = (conversation_id, math_tick) => {
   return $.get(
     '/api/v3/math/pca2?&math_tick=' +
-      math_tick +
-      '&conversation_id=' +
-      conversation_id
+    math_tick +
+    '&conversation_id=' +
+    conversation_id
   )
 }
 
@@ -1100,9 +1106,9 @@ const fetchUnmoderatedComments = (conversation_id) => {
   const includeSocial = ''
   return $.get(
     '/api/v3/comments?moderation=true&include_voting_patterns=false&' +
-      includeSocial +
-      'mod=0&conversation_id=' +
-      conversation_id
+    includeSocial +
+    'mod=0&conversation_id=' +
+    conversation_id
   )
 }
 
@@ -1143,9 +1149,9 @@ const fetchAcceptedComments = (conversation_id) => {
   const includeSocial = ''
   return $.get(
     '/api/v3/comments?moderation=true&include_voting_patterns=false&mod=1&' +
-      includeSocial +
-      'conversation_id=' +
-      conversation_id
+    includeSocial +
+    'conversation_id=' +
+    conversation_id
   )
 }
 
@@ -1186,9 +1192,9 @@ const fetchRejectedComments = (conversation_id) => {
   const includeSocial = ''
   return $.get(
     '/api/v3/comments?moderation=true&include_voting_patterns=false&' +
-      includeSocial +
-      'mod=-1&conversation_id=' +
-      conversation_id
+    includeSocial +
+    'mod=-1&conversation_id=' +
+    conversation_id
   )
 }
 
@@ -1656,8 +1662,8 @@ const conversationStatsFetchError = (err) => {
 const fetchConversationStats = (conversation_id, until) => {
   return $.get(
     '/api/v3/conversationStats?conversation_id=' +
-      conversation_id +
-      (until ? '&until=' + until : '')
+    conversation_id +
+    (until ? '&until=' + until : '')
   )
 }
 

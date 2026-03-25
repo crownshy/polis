@@ -7,7 +7,6 @@ import { doSignin, doFacebookSignin } from '../../actions'
 import { Link, Redirect } from 'react-router-dom'
 import { Heading, Box, Text, Button, jsx } from 'theme-ui'
 import StaticLayout from './lander-layout'
-
 import strings from '../../strings/strings'
 
 const fbAppId = process.env.FB_APP_ID

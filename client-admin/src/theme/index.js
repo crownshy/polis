@@ -27,8 +27,8 @@ export default {
     text: '#60656F',
     // background: "#03a9f4",
     // primary: "#FFF",
-    background: '#FFF',
-    primary: '#03a9f4',
+    background: '#fdfdf6',
+    primary: '#426732',
     secondary: '#F6F7F8',
     mediumGray: '#60656F'
   },
@@ -90,7 +90,7 @@ export default {
   },
   cards: {
     primary: {
-      backgroundColor: 'background',
+      backgroundColor: 'white',
       color: 'mediumGray',
       padding: 3,
       borderRadius: 4,

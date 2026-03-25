@@ -30,6 +30,7 @@ import Account from './components/conversations-and-account/account'
 import Integrate from './components/conversations-and-account/integrate'
 
 import InteriorHeader from './components/interior-header'
+import { doSignin } from './actions'
 
 const PrivateRoute = ({ component: Component, isLoading, authed, ...rest }) => {
   if (isLoading) {
@@ -107,6 +108,30 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    console.log("Listening for messages")
+    window.addEventListener("message", async (event) => {
+      // Security check: only trust messages from stage.comhairle.scot
+      const allowedOrigins = ["https://comhairle.bloomproject.us", "https://testing.comhairle.scot", "https://waves.comhairle.scot", "https://stage.comhairle.scot", "https://bloom.comhairle.scot", "https://comhairle.scot", "https://demo.comhairle.scot", "https://community.comhairle.scot", "https://la.comhairle.scot"]
+
+      if (!(allowedOrigins.includes(event.origin) || event.origin.startsWith("http://localhost"))) return;
+
+      const { type, user, password } = event.data;
+
+      if (type === "POLIS_LOGIN" && user && password) {
+        try {
+
+          const attrs = {
+            email: user,
+            password: password,
+            noRedirect: true
+          }
+
+          this.props.dispatch(doSignin(attrs))
+        } catch (err) {
+          console.error("Login iframe failed:", err);
+        }
+      }
+    });
     this.mediaQueryChanged()
   }
 

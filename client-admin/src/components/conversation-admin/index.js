@@ -48,6 +48,7 @@ class ConversationAdminContainer extends React.Component {
 
     return (
       <Flex>
+        {/*
         <Box sx={{ mr: [5], p: [4], flex: '0 0 275' }}>
           <Box sx={{ mb: [3] }}>
             <Link sx={{ variant: 'links.nav' }} to={`/`}>
@@ -99,7 +100,8 @@ class ConversationAdminContainer extends React.Component {
             </Link>
           </Box>
         </Box>
-        <Box sx={{ p: [4], flex: '0 0 auto', maxWidth: '35em', mx: [4] }}>
+        */}
+        <Box sx={{ p: [0], flex: '0 0 auto', maxWidth: '35em', mx: [0] }}>
           <Switch>
             <Route
               exact

@@ -58,6 +58,7 @@ class CommentModeration extends React.Component {
 
     return (
       <Box>
+        {/*
         <Heading
           as="h3"
           sx={{
@@ -67,6 +68,7 @@ class CommentModeration extends React.Component {
           }}>
           Moderate
         </Heading>
+        */}
         <Flex sx={{ mb: [4] }}>
           <Link
             data-test-id="mod-queue"
@@ -93,7 +95,7 @@ class CommentModeration extends React.Component {
               : null}
           </Link>
           <Link
-          data-test-id="filter-rejected"
+            data-test-id="filter-rejected"
             sx={{
               mr: [4],
               variant: url === 'rejected' ? 'links.activeNav' : 'links.nav'

@@ -10,7 +10,7 @@
     {{#if desktop}}width: 60%;{{/if}}
      --}}
     margin-top: 0px;
-
+	background-color: #fafaf9;
     color: black;
     padding: 5px 0px 5px 0px;
     font-style: italic;
@@ -18,43 +18,6 @@
 
     "
     dir={{direction}}> {{! protips column }}
-
-  <p>
-      {{!-- present all hints to screen reader --}}
-
-      {{#if hideHelp}}
-        {{!-- even if help text is hidden, still screen read the main comment box label/prompt Jan2025 n/m show always --}}
-        <label for="comment_form_textarea">
-          {{{s.writeCommentHelpText}}}
-        </label>
-      {{else}}
-        <label for="comment_form_textarea"
-               style="display:block;">
-          {{{s.writeCommentHelpText}}}
-        </label>
-        <p>
-          {{{s.helpWriteListIntro}}}
-        </p>
-        <ul>
-          <li>{{{s.helpWriteListStandalone}}}</li>
-          <li>{{{s.helpWriteListRaisNew}}}</li>
-          <li>{{{s.helpWriteListShort}}}</li>
-        </ul>
-        <label for="comment_form_textarea" style="display:block">
-          {{{s.tipCommentsRandom}}}
-        </label>
-      {{/if}}
-
-      {{!-- end screen-reader-text --}}
-  </p>
-
-  {{!-- present all hints to screen reader --}}
-  <div class="screen-reader-text">
-    <h2>{{s.commentWritingTipsHintsHeader}}</h2>
-    <label for="comment_form_textarea" style="display:block">{{charLimitString}}</label>
-    <label for="comment_form_textarea" style="display:block">{{s.tipNoQuestions}}</label>
-    <label for="comment_form_textarea" style="display:block">{{s.tipOneIdea}}</label>
-  </div> {{!-- end screen-reader-text --}}
 
 
   <p
