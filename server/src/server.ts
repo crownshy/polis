@@ -6712,9 +6712,15 @@ Email verified! You can close this tab or hit the back button.
 				}
 				let conv = rows[0];
 				pgQueryP(
-					"update conversations set is_active = false where zid = ($1);",
+					"update conversations set is_active = false where zid = ($1) RETURNING *;",
 					[conv.zid]
-				);
+				).then(function (results: any) {
+					res.status(200).json(results[0]);
+				})
+				.catch(function (err: any) {
+					fail(res, 500, "polis_err_closing_conversation", err);
+				});
+
 			})
 			.catch(function(err: any) {
 				fail(res, 500, "polis_err_closing_conversation", err);
