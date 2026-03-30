@@ -113,7 +113,7 @@ class App extends React.Component {
       // Security check: only trust messages from stage.comhairle.scot
       const allowedOrigins = ["https://comhairle.bloomproject.us", "https://testing.comhairle.scot", "https://waves.comhairle.scot", "https://stage.comhairle.scot", "https://bloom.comhairle.scot", "https://comhairle.scot", "https://demo.comhairle.scot", "https://community.comhairle.scot", "https://la.comhairle.scot"]
 
-      if (!(allowedOrigins.includes(event.origin) || event.origin.startsWith("http://localhost"))) return;
+      if (!(allowedOrigins.includes(event.origin) || event.origin.startsWith("http://localhost") || event.origin.endsWith("comhairle.scot"))) return;
 
       const { type, user, password } = event.data;
 
