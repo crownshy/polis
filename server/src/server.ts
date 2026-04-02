@@ -5410,10 +5410,12 @@ Email verified! You can close this tab or hit the back button.
 		vote?: number;
 		anon?: boolean;
 		is_seed?: boolean;
+		parent_url?: any;
 	}
 
 	interface PolisRequest extends Request {
 		p: PolisRequestParams;
+		cookies: { [x: string]: any };
 		connection?: {
 			remoteAddress?: string;
 			socket?: {
@@ -5439,6 +5441,9 @@ Email verified! You can close this tab or hit the back button.
 			fail(res, 400, "polis_err_param_missing_txt");
 			return;
 		}
+
+		// Ensure permanent cookie is set (like votes endpoint does)
+		let permanent_cookie = getPermanentCookieAndEnsureItIsSet(req, res);
 
 		async function doGetPid(): Promise<number> {
 			if (_.isUndefined(pid) || Number(pid) < 0) {
@@ -5502,12 +5507,22 @@ Email verified! You can close this tab or hit the back button.
 							return newPid
 						}
 						return pid;
+					} else if (shouldCreateXidRecord) {
+						// New xid - create participant first (like votes endpoint does)
+						const rows = await addParticipantAndMetadata(
+							zid!,
+							undefined, // uid doesn't exist yet for new xid
+							req as any,
+							permanent_cookie
+						);
+						const ptpt = rows[0];
+						uid = ptpt.uid;
+						pid = ptpt.pid;
+						await createXidRecordByZid(zid!, uid!, xid!, null, null, null);
+						return pid;
 					}
 				}
 				const newPid = await doGetPid();
-				if (shouldCreateXidRecord) {
-					await createXidRecordByZid(zid!, uid!, xid!, null, null, null);
-				}
 				return newPid;
 			})();
 
